@@ -14,6 +14,11 @@
 ## that may befall you or others as a result of its use. Please send comments and report 
 ## bugs to Krzysztof Bartoszek at krzbar@protonmail.ch .
 
+## with a singular tree due to a single short tip branch numerical mvMORPH will return estimates that are very
+## different from those when this branch is removed. mvMORPH in the near singular case might also return 
+## comment that convergence attained. mvSLOUCH returns -Inf for likelihood prompting the user to hopefully
+## investigate the tree
+
 phyltree50<-sim.bd.taxa(50,1,1,0)[[1]]
 plot(phyltree50)
 which(phyltree50$tip.label=="t50") ## here we perhaps need to change the node dependen on the random seed
