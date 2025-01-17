@@ -20,6 +20,7 @@
 ## investigate the tree
 
 ## TODO: set random number generator
+## CHECK on laptop if this is the latest file
 
 library(ape)
 library(mvSLOUCH)
