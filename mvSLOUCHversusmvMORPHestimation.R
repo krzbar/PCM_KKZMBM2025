@@ -19,6 +19,8 @@
 ## comment that convergence attained. mvSLOUCH returns -Inf for likelihood prompting the user to hopefully
 ## investigate the tree
 
+## TODO: set random number generator
+
 library(ape)
 library(mvSLOUCH)
 library(TreeSim)
