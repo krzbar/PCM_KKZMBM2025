@@ -21,6 +21,7 @@
 
 ## TODO: set random number generator
 ## CHECK on laptop if this is the latest file
+## mvMORPH cf pic and rpf
 
 library(ape)
 library(mvSLOUCH)
