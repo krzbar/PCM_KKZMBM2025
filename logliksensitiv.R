@@ -46,6 +46,9 @@ randomseed<-.Random.seed;set.seed(randomseed, "L'Ecuyer-CMRG");RNG_kind<-RNGkind
     BMdatan1normal<-
     BMdatan <- drop internal from BMdatanInternal
 
+    ## we can additionally remove a random tip
+    ## instead of keeping a single f_normalbranchlen we can have a vector of them-and check how the liklihood changes with shortening and shortening of this branch
+    
     resmvsln<-mvSLOUCH::BrownianMotionModel(phyltreen,BMdatan) ## if -Inf rerun but keep counter of errors
     resmvsln1singular<-mvSLOUCH::BrownianMotionModel(phyltreen1singular,BMdatan1singular) ## should be -Inf
     resmvsln1normal<-mvSLOUCH::BrownianMotionModel(phyltreen1normal,BMdatan1normal) ## if -Inf rerun but keep counter of errors
