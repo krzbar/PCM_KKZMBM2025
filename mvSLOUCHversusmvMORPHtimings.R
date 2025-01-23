@@ -19,8 +19,8 @@ library(mvSLOUCH)
 library(TreeSim)
 library(mvMORPH)
 
-v_doneN<-c(5,10,30,50,100,200,1000) ##2000,5000,10000,20000,50000)
-vN<-c(500,1500,2000)
+v_doneN<-c()
+vN<-c(5,10,30,50,100,200,500,1000,1500,2000) 
 numreps<-30
 BMparams<-list(X0=matrix(0,ncol=1,nrow=4),Sigma=rbind(c(1,0,0,0),c(0.5,1,0,0),c(0.5,0.5,1,0),c(0.5,0.5,0.5,1)))
 filepath<-"."
