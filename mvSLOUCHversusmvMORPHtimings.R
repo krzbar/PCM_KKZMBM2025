@@ -19,7 +19,8 @@ library(mvSLOUCH)
 library(TreeSim)
 library(mvMORPH)
 
-vN<-c(5,10,30,50,100,200,1000) ##2000,5000,10000,20000,50000)
+v_doneN<-c(5,10,30,50,100,200,1000) ##2000,5000,10000,20000,50000)
+vN<-c(500,1500,2000)
 numreps<-30
 BMparams<-list(X0=matrix(0,ncol=1,nrow=4),Sigma=rbind(c(1,0,0,0),c(0.5,1,0,0),c(0.5,0.5,1,0),c(0.5,0.5,0.5,1)))
 filepath<-"."
@@ -54,12 +55,15 @@ if (b_dosimulation){
 	        time_mvmorph_pic<-end_mvmorph_pic-start_mvmorph_pic
 		cat("time mvMORPH pic: ",time_mvmorph_pic)
 		cat("\n")
-		start_mvmorph_rpf<-Sys.time()
-		resmvmorph_rpf<-mvMORPH::mvBM(phyltree,BMdata, model="BM1",method="rpf") 
-    		end_mvmorph_rpf<-Sys.time()
-	        time_mvmorph_rpf<-end_mvmorph_rpf-start_mvmorph_rpf
+		time_mvmorph_rpf<-end_mvmorph_rpf<-start_mvmorph_rpf<-NA
+		if (n<1000){
+		    start_mvmorph_rpf<-Sys.time()
+    		    resmvmorph_rpf<-mvMORPH::mvBM(phyltree,BMdata, model="BM1",method="rpf") 
+    		    end_mvmorph_rpf<-Sys.time()	    	    
+		}
+		time_mvmorph_rpf<-end_mvmorph_rpf-start_mvmorph_rpf
 		cat("time mvMORPH rpf: ",time_mvmorph_rpf)
-        	cat("\n")
+        	cat("\n")		
 		list(i=i,n=n,phyltree=phyltree,BMdata=BMdata,start_mvslouch=start_mvslouch,end_mvslouch=end_mvslouch,start_mvmorph_pic=start_mvmorph_pic,end_mvmorph_pic=end_mvmorph_pic,start_mvmorph_rpf=start_mvmorph_rpf,end_mvmorph_rpf=end_mvmorph_rpf,time_mvslouch=time_mvslouch,time_mvmorph_pic=time_mvmorph_pic,time_mvmorph_rpf=time_mvmorph_rpf,resmvslouch=resmvslouch,resmvmorph_pic=resmvmorph_pic,resmvmorph_rpf=resmvmorph_rpf,randomseed=randomseed,RNG_kind=RNG_kind,RNG_version=RNG_version)
 	},BMparams=BMparams,filepath=filepath,fileprefix=fileprefix,simplify=FALSE)
         mTimings<-t(sapply(res_n,function(x){c(x$time_mvslouch,x$time_mvmorph_pic,x$time_mvmorph_rpf)},simplify=TRUE))
@@ -87,7 +91,6 @@ names(l_timings$lInterQuantiles)<-paste0("n_",vN)
 i<-1
 for (n in vN){
     load(paste0(filepath,"/",fileprefix,"_n_",n,"_results.RData"))
-    ##n_i<-which(names(l_timings)==paste0("n_",n))
     l_timings$mMeans<-rbind(l_timings$mMeans,meantime)
     l_timings$mVars<-rbind(l_timings$mVars,vartime)
     l_timings$mMedians<-rbind(l_timings$mMedians,mediantime)
@@ -96,12 +99,14 @@ for (n in vN){
     i<-i+1
 }
 
+vN<-sort(c(vN,v_doneN))
+numN<-length(vN)
 png(paste0(filepath,"/",fileprefix,".png"))
 sink(paste0(filepath,"/",fileprefix,".txt"))
-v_ylim<-c(0.01,(max(l_timings$mMedians[i-1,1]+l_timings$lInterQuantiles[[i-1]][2,1],l_timings$mMedians[i-1,2]+l_timings$lInterQuantiles[[i-1]][2,2])+0.05))
+v_ylim<-c(0.01,(max(c(l_timings$mMedians[numN,1]+l_timings$lInterQuantiles[[numN]][2,1],l_timings$mMedians[numN,2]+l_timings$lInterQuantiles[[numN]][2,2],l_timings$mMedians[numN,3]+l_timings$lInterQuantiles[[numN]][2,3]))+0.05))
 c_ylab<-"time[s]"
 if (c_plotlogscale){v_ylim<-log(v_ylim);c_ylab<-"log(time[s])"}
-plot(NA,xlim=c(0,max(vN)+1),ylim=v_ylim,main="",xlab="n",ylab=c_ylab)
+plot(NA,xlim=c(0,max(vN)+1),ylim=v_ylim,main="",xlab="n",ylab=c_ylab,cex.axis=1.5,font.axis=2,font.lab=2,cex.axis=2)
 
     for (j in 1:3){ ## mvSLOUCH, mvMORPH
 	i<-1
@@ -116,9 +121,9 @@ plot(NA,xlim=c(0,max(vN)+1),ylim=v_ylim,main="",xlab="n",ylab=c_ylab)
     	    interquant_time[1]<-median_time-1.5*(median_time-l_timings$lInterQuantiles[[i]][1,j])
 	    interquant_time[2]<-median_time+1.5*(l_timings$lInterQuantiles[[i]][2,j]-median_time)
 	    if (c_plotlogscale){interquant_time[1]<-log(interquant_time[1]);interquant_time[2]<-log(interquant_time[2])}
-	    segments(n,interquant_time[1], n, interquant_time[2], col=vcolours[j],lwd=2)
-	    segments(n-len_bar,interquant_time[1], n+len_bar, interquant_time[1], col=vcolours[j],lwd=2)
-	    segments(n-len_bar,interquant_time[2], n+len_bar, interquant_time[2], col=vcolours[j],lwd=2)
+	    segments(n,interquant_time[1], n, interquant_time[2], col=vcolours[j],lwd=4)
+	    segments(n-len_bar,interquant_time[1], n+len_bar, interquant_time[1], col=vcolours[j],lwd=4)
+	    segments(n-len_bar,interquant_time[2], n+len_bar, interquant_time[2], col=vcolours[j],lwd=4)
 	    i<-i+1
 	    v_q1<-c(v_q1,interquant_time[1])
 	    v_q2<-c(v_q2,interquant_time[2])
@@ -157,5 +162,6 @@ plot(NA,xlim=c(0,max(vN)+1),ylim=v_ylim,main="",xlab="n",ylab=c_ylab)
 	for (i in 1:length(vN)){cat(paste0(v_q2[i]," "))}	
 	cat("\n")
     }    
-    legend("topleft",legend=c("mvSLOUCH 2.7.6","mvMORPH 1.2.1 pic","mvMORPH 1.2.1 rpf"),col=vcolours,pch=19,bty="n")
+    legend("bottomright",legend=c("mvSLOUCH 2.7.6","mvMORPH 1.2.1 pic","mvMORPH 1.2.1 rpf"),col=vcolours,pch=19,bty="n",cex=2,font=2)
 dev.off()
+sink()
