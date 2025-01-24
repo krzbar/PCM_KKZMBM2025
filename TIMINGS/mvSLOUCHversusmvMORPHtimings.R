@@ -56,7 +56,7 @@ if (b_dosimulation){
 		cat("time mvMORPH pic: ",time_mvmorph_pic)
 		cat("\n")
 		resmvmorph_rpf<-time_mvmorph_rpf<-end_mvmorph_rpf<-start_mvmorph_rpf<-NA
-		if (n<1000){
+		if (n<1001){
 		    start_mvmorph_rpf<-Sys.time()
     		    resmvmorph_rpf<-mvMORPH::mvBM(phyltree,BMdata, model="BM1",method="rpf") 
     		    end_mvmorph_rpf<-Sys.time()	    	    
