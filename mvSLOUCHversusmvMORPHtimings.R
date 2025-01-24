@@ -83,6 +83,8 @@ if (b_dosimulation){
 
 ## make plot and table
 
+vN<-sort(c(vN,v_doneN))
+numN<-length(vN)
 
 l_timings<-vector("list",5)
 names(l_timings)<-c("mMeans","mVars","mMedians","lInterQuantiles","NAsmvSLOUCH")
@@ -99,8 +101,6 @@ for (n in vN){
     i<-i+1
 }
 
-vN<-sort(c(vN,v_doneN))
-numN<-length(vN)
 png(paste0(filepath,"/",fileprefix,".png"))
 sink(paste0(filepath,"/",fileprefix,".txt"))
 v_ylim<-c(0.01,(max(c(l_timings$mMedians[numN,1]+l_timings$lInterQuantiles[[numN]][2,1],l_timings$mMedians[numN,2]+l_timings$lInterQuantiles[[numN]][2,2],l_timings$mMedians[numN,3]+l_timings$lInterQuantiles[[numN]][2,3]))+0.05))
