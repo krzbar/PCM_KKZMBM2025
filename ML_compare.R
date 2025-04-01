@@ -165,11 +165,11 @@ col_rpf <- rgb(cols[1,2], cols[2,2], cols[3,2], 0.7)
 col_pic <- rgb(cols[1,1], cols[2,1], cols[3,1], 0.7)
 
 # title for the subplots
-mains <- c(expression(X[0]^{(1)}),
-           expression(X[0]^{(2)}),
-           expression(paste(Sigma, Sigma^T, "[1,1]")),
-           expression(paste(Sigma, Sigma^T, "[1,2]")),
-           expression(paste(Sigma, Sigma^T, "[2,2]")),
+mains <- c(expression(hat(X[0])^{(1)}),
+           expression(hat(X[0])^{(2)}),
+           expression(paste(hat(Sigma), "[1,1]")),
+           expression(paste(hat(Sigma), "[1,2]")),
+           expression(paste(hat(Sigma), "[2,2]")),
            "max. log-lik.")
 
 # prepare the layout
@@ -184,6 +184,8 @@ heights <- c(1, rep(5, 6), 3)
 widths <- c(3, 5,5, 1, 5,5)
 
 
+# ----------> plot in svg to preserve the \ell symbol
+# ----------> later converted to pdf
 {
 # ---------------------------- start plot ---------------------------
 

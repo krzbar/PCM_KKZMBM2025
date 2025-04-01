@@ -203,11 +203,11 @@ cols <- c(rgb(1,0.1,0.1,0.4),
           rgb(0.1,1,0.1,0.4),
           rgb(0.1,0.1,1,0.4))
 
-mains <- c(expression(X[0]^{(1)}),
-           expression(X[0]^{(2)}),
-           expression(paste(Sigma, Sigma^T, "[1,1]")),
-           expression(paste(Sigma, Sigma^T, "[1,2]")),
-           expression(paste(Sigma, Sigma^T, "[2,2]")))
+mains <- c(expression(hat(X[0])^{(1)}),
+           expression(hat(X[0])^{(2)}),
+           expression(paste(hat(Sigma), "[1,1]")),
+           expression(paste(hat(Sigma), "[1,2]")),
+           expression(paste(hat(Sigma), "[2,2]")))
 
 Mplots <- rbind(matrix(1:20, nrow = 4), rep(21, 5))
 Mrow <- c(0, max(Mplots) + 1:4, 0)
