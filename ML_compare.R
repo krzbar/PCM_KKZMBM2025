@@ -157,7 +157,6 @@ mlparams_pic_100 <- sapply(l_seq_100, ml_params, tree = tree_100, Xsim = Xsim_10
 
 
 # ============================= plot the results ===============================
-
 # prepare the colors
 cols <- sapply(c("skyblue1","midnightblue", "orange1"), col2rgb)/255
 col_mvs <- rgb(cols[1,3], cols[2,3], cols[3,3], 0.7)
@@ -172,27 +171,19 @@ mains <- c(expression(hat(X[0])^{(1)}),
            expression(paste(hat(Sigma), "[2,2]")),
            "max. log-lik.")
 
+
 # prepare the layout
-Mplots_ <- matrix(1:(4*6), nrow = 6, byrow = TRUE)
-Mplots <- cbind(Mplots_[,1:2], rep(0, length(truevalues)+1), Mplots_[,3:4]) 
-Mlegend <- rep(max(Mplots)+1, 5)
-Mcol <- c(rep(max(Mlegend)+1, 2), 0, rep(max(Mlegend)+2, 2))
+Mplots <- matrix(1:(2*6), nrow = 6, byrow = TRUE)
+Mlegend <- rep(max(Mplots)+1, 2)
+Mcol <- c(rep(max(Mlegend)+1, 2))
 Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
 
 M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
 heights <- c(1, rep(5, 6), 3)
-widths <- c(3, 5,5, 1, 5,5)
+widths <- c(2, 5,5)
 
 
-# ----------> plot in svg to preserve the \ell symbol
-# ----------> later converted to pdf
-{
-# ---------------------------- start plot ---------------------------
-
-svg("ML_compare.svg", width = 20, height = 25) 
- 
-layout(mat = M, heights = heights, widths = widths)
-
+# prepare limits
 xid <- c(1, seq(20, 100, by = 20))
 i_zoomed <- 15
 xid_zoomed <- c(1, seq(5, i_zoomed, by = 5))
@@ -206,111 +197,144 @@ ylims_zoomed_4 <- rbind(c(-2, 2),
                         c(-17, -10))
 
 ylims_zoomed_100 <- rbind(c(-2, 2),
-                        c(-2, 2),
-                        c(0, 10),
-                        c(0, 10),
-                        c(0, 20),
-                        c(-310, -220))
+                          c(-2, 2),
+                          c(0, 10),
+                          c(0, 10),
+                          c(0, 20),
+                          c(-310, -220))
 
 
-# ---------------------------- plot the results ---------------------------
-par(mar = c(4.1, 4.1, 3.1, 2.1))
-for (i in 1:6){
-  # ------------------------------ plot for n = 4 ------------------------------
-  # ---------------------- zoomed in scale ----------------------
-  plot(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-       xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_4[i,])
-  grid()
-  lines(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 1.5,
-        lwd = 2)
-  lines(mlparams_rpf_4[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 1.5,
-        lty = 2, lwd = 1.5)
-  lines(mlparams_mvs_4[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 1.5)
-  
-  axis(1, at = xid_zoomed, labels = formatC(l_seq_4[xid_zoomed], format = "e", digits = 2), 
-       cex.axis = 1.75, line = 1.5)
-  axis(2, cex.axis = 2, line = 1.5)
-  mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 1.5)
-  abline(h = truevalues[i], lty = 2, lwd = 2)
-  
-  # ---------------------- full scale ----------------------
-  plot(mlparams_pic_4[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-       xlab = "", ylab = "", type = "o")
-  grid()
-  lines(mlparams_pic_4[i,], pch = 16, col = col_pic, type = "o", cex = 1.5,
-        lwd = 2)
-  lines(mlparams_rpf_4[i,], pch = 5, col = col_rpf, type = "o", cex = 1.5,
-        lty = 2, lwd = 1.5)
-  lines(mlparams_mvs_4[i,], pch = 17, col = col_mvs, type = "o", cex = 1.5)
-  
-  axis(1, at = xid, labels = formatC(l_seq_4[xid], format = "e", digits = 2), 
-       cex.axis = 1.75, line = 1.5)
-  axis(2, cex.axis = 2, line = 1.5)
-  mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 1.5)
-  
-  
-  
-  # ----------------------------- plot for n = 100 -----------------------------
-  # ---------------------- zoomed in scale ----------------------
-  plot(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-       xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_100[i,])
-  grid()
-  abline(h = truevalues[i], lty = 2, lwd = 2)
-  lines(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 1.5,
-        lwd = 2)
-  lines(mlparams_rpf_100[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 1.5,
-        lty = 2, lwd = 1.5)
-  lines(mlparams_mvs_100[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 1.5)
-  
-  axis(1, at = xid_zoomed, labels = formatC(l_seq_100[xid_zoomed], format = "e", digits = 2), 
-       cex.axis = 1.75, line = 1.5)
-  axis(2, cex.axis = 2, line = 1.5)
-  mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 1.5)
-  
-  
-  # ---------------------- full scale ----------------------
-  plot(mlparams_pic_100[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-       xlab = "", ylab = "", type = "o")
-  grid()
-  lines(mlparams_pic_100[i,], pch = 16, col = col_pic, type = "o", cex = 1.5,
-        lwd = 2)
-  lines(mlparams_rpf_100[i,], pch = 5, col = col_rpf, type = "o", cex = 1.5,
-        lty = 2, lwd = 1.5)
-  lines(mlparams_mvs_100[i,], pch = 17, col = col_mvs, type = "o", cex = 1.5)
-  
-  axis(1, at = xid, labels = formatC(l_seq_100[xid], format = "e", digits = 2), 
-       cex.axis = 1.75, line = 1.5)
-  axis(2, cex.axis = 2, line = 1.5)
-  mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 1.5)
-  
-}
+# ============================ divide into 2 plots =============================
+# ===================== 1st plot: n = 4 =====================
 
-# ---------------------------- plot legend ---------------------------
-par(mar = c(0,0,0,0))
-plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
-       lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
-       col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
-       horiz = TRUE, x.intersp = 2, text.width = 1.5, cex = 3, bty = "n")
-
-# ---------------------------- plot column names ---------------------------
-plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-text(0,0, paste0("n = 4"), font = 2, cex  = 3)
-
-plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-text(0,0, paste0("n = 100"), font = 2, cex  = 3)
-
-
-# ---------------------------- plot row names ---------------------------
-for (i in 1:6){
+{
+  svg("ML_compare_n4.svg", width = 25, height = 25) 
+  layout(mat = M, heights = heights, widths = widths)
+  # ---------------------------- plot the results ---------------------------
+  par(mar = c(4.1, 4.1, 3.1, 4.1))
+  for (i in 1:6){
+    # ------------------------------ plot for n = 4 ------------------------------
+    # ---------------------- zoomed in scale ----------------------
+    plot(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_4[i,])
+    grid()
+    lines(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_4[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_4[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid_zoomed, labels = formatC(l_seq_4[xid_zoomed], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    
+    # ---------------------- full scale ----------------------
+    plot(mlparams_pic_4[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o")
+    grid()
+    lines(mlparams_pic_4[i,], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_4[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_4[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid, labels = formatC(l_seq_4[xid], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    
+  }
+  
+  # ---------------------------- plot legend ---------------------------
+  par(mar = c(0,0,0,0))
   plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-  text(-1,0, mains[i], font = 1, cex  = 3)
+  legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
+         lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
+         col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
+         horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
+  
+  # ---------------------------- plot column names ---------------------------
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  text(0,0, paste0("n = 4"), font = 2, cex  = 5)
+  
+  
+  # ---------------------------- plot row names ---------------------------
+  for (i in 1:6){
+    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+    text(0,0, mains[i], font = 2, cex  = 4)
+  }
+  dev.off()
 }
 
 
-dev.off()
-
+# ===================== 2nd plot: n = 100 =====================
+{
+  svg("ML_compare_n100.svg", width = 25, height = 25) 
+  layout(mat = M, heights = heights, widths = widths)
+  # ---------------------------- plot the results ---------------------------
+  par(mar = c(4.1, 4.1, 3.1, 4.1))
+  for (i in 1:6){
+    # ------------------------------ plot for n = 4 ------------------------------
+    # ---------------------- zoomed in scale ----------------------
+    plot(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_100[i,])
+    grid()
+    lines(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_100[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_100[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid_zoomed, labels = formatC(l_seq_100[xid_zoomed], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    
+    # ---------------------- full scale ----------------------
+    plot(mlparams_pic_100[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o")
+    grid()
+    lines(mlparams_pic_100[i,], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_100[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_100[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid, labels = formatC(l_seq_100[xid], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    
+  }
+  
+  # ---------------------------- plot legend ---------------------------
+  par(mar = c(0,0,0,0))
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
+         lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
+         col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
+         horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
+  
+  # ---------------------------- plot column names ---------------------------
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  text(0,0, paste0("n = 100"), font = 2, cex  = 5)
+  
+  
+  # ---------------------------- plot row names ---------------------------
+  for (i in 1:6){
+    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+    text(0,0, mains[i], font = 2, cex  = 4)
+  }
+  dev.off()
 }
+
+# ----------> plot in svg to preserve the \ell symbol
+# ----------> later converted to pdf
+
+
 
 
 # =================== check ML estimates ===================
@@ -331,6 +355,9 @@ l_seq_100[max(which(!is.na(mlparams_pic_100[6,])))]
 mlparams_pic_4[,100]
 mlparams_pic_100[,dim(mlparams_pic_100)[2]]
 
+
+
+sapply(l_seq_4[1:48], ml_params, tree = tree_4, Xsim = Xsim_4,  method = "pic")
 
 
 
