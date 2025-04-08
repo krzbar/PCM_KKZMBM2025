@@ -1,0 +1,6 @@
+# ========== R ==========
+# History files
+*.Rhistory
+
+# Session data files
+*.RData
