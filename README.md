@@ -9,3 +9,5 @@ This repository contains the following `R` scripts:
   Contains code to compare the choices of traits replacement in a cherry with short tip branches, tested on trees with $n = 5, 25, 50, 100$.
 * `data_analysis.R`
   Contains code to compare different methods to resolve the problem of short branch in the canid phylogeny and morphogeometric data.
+* `mvSLOUCHversusmvMORPHtimings.R` (in `TIMINGS` subdirectory)
+  Contains code to compare running times of different PCM software and methods.
