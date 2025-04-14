@@ -10,4 +10,4 @@ This repository contains the following `R` scripts:
 * `data_analysis.R`
   Contains code to compare different methods to resolve the problem of short branch in the canid phylogeny and morphogeometric data.
 * `mvSLOUCHversusmvMORPHtimings.R` (in `TIMINGS` subdirectory)
-  Contains code to compare running times of different PCM software and methods.
+  Contains code to compare running times of different PCM softwares and methods.
