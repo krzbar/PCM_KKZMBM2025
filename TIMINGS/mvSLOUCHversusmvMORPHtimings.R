@@ -1,11 +1,6 @@
 ## These are the R scripts and numerical results accompanying 
-## CHECK FINAL AUTHORS
-## Bartoszek, Brahmantio, Munoz-Duran, Fuentes-Gonzalez, Chi Kiang, Pienaar, and Polly
-## TITLE?
-## "TITLE?"
-
-## The R setup for the manuscript was as follows: R version 4.4.1 (2024-06-14) 
-## Platform: x86_64-pc-linux-gnu (64-bit) Running under: openSUSE Leap 15.6
+## Bartoszek, Brahmantio, Munoz-Duran, Fuentes-Gonzalez,Pienaar, and Polly
+## Short branch singularities in phylogenetic comparative methods
 
 ## This software comes AS IS in the hope that it will be useful WITHOUT ANY WARRANTY, 
 ## NOT even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
