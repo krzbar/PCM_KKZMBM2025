@@ -209,12 +209,20 @@ i_zoomed <- 15
 xid_zoomed <- c(1, seq(5, i_zoomed, by = 5))
 
 
-ylims_zoomed_4 <- rbind(c(-3, 3),
-                        c(-3, 3),
+ylims_zoomed_4 <- rbind(c(-5, 5),
+                        c(-5, 5),
                         c(0, 15),
                         c(-1, 15),
                         c(0, 15),
                         c(-15, 10))
+
+ylims_4 <- rbind(c(-5, 5),
+                 c(-5, 5),
+                 c(0, 15),
+                 c(-1, 15),
+                 c(0, 15),
+                 c(-15, 30))
+
 
 ylims_zoomed_100 <- rbind(c(-3, 3),
                           c(-3, 3),
@@ -222,6 +230,13 @@ ylims_zoomed_100 <- rbind(c(-3, 3),
                           c(-1, 15),
                           c(0, 15),
                           c(-310, -220))
+
+ylims_100 <- rbind(c(-3, 3),
+                   c(-3, 3),
+                   c(0, 15),
+                   c(-1, 15),
+                   c(0, 15),
+                   c(-280, -160))
 
 
 # ============================ divide into 2 plots =============================
@@ -253,7 +268,7 @@ ylims_zoomed_100 <- rbind(c(-3, 3),
     
     # ---------------------- full scale ----------------------
     plot(mlparams_pic_4[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o")
+         xlab = "", ylab = "", type = "o", ylim = ylims_4[i,])
     grid()
     abline(h = truevalues[i], lty = 2, lwd = 2)
     lines(mlparams_pic_4[i,], pch = 16, col = col_pic, type = "o", cex = 2,
@@ -317,7 +332,7 @@ ylims_zoomed_100 <- rbind(c(-3, 3),
     
     # ---------------------- full scale ----------------------
     plot(mlparams_pic_100[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_100[i,])
+         xlab = "", ylab = "", type = "o", ylim = ylims_100[i,])
     grid()
     abline(h = truevalues[i], lty = 2, lwd = 2)
     lines(mlparams_pic_100[i,], pch = 16, col = col_pic, type = "o", cex = 2,

@@ -4,7 +4,9 @@ Code for simulation study and data analysis for the article "Computational singu
 
 This repository contains the following `R` scripts:
 * `ML_compare.R`
-  Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips.
+  Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips (1st scenario).
+* `ML_compare2.R`
+  Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips (2nd scenario).
 * `short_tip_remove.R`
   Contains code to compare the choices of traits replacement in a cherry with short tip branches, tested on trees with $n = 5, 25, 50, 100$.
 * `DataPrep.R`
