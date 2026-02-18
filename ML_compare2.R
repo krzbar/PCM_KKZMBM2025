@@ -89,13 +89,21 @@ set.seed(random_seeds[2])
 
 # simulate for n = 4
 for (i in 1:length(l_seq_4)){
-  Xsim_4[[i]] <- mvSLOUCH::simulBMProcPhylTree(phyltree = TREES_4[[i]], 
-                                               X0 = X0, Sigma = Sigma)
+  X4 <- list()
+  for (j in 1:10){
+    X4[[j]] <- mvSLOUCH::simulBMProcPhylTree(phyltree = TREES_4[[i]], 
+                                             X0 = X0, Sigma = Sigma)
+  }
+  Xsim_4[[i]] <- X4
 }
 
 for (i in 1:length(l_seq_100)){
-  Xsim_100[[i]] <- mvSLOUCH::simulBMProcPhylTree(phyltree = TREES_100[[i]], 
-                                                 X0 = X0, Sigma = Sigma)
+  X100 <- list()
+  for (j in 1:10){
+    X100[[j]] <- mvSLOUCH::simulBMProcPhylTree(phyltree = TREES_100[[i]], 
+                                               X0 = X0, Sigma = Sigma)
+  }
+  Xsim_100[[i]] <- X100
 }
 
 
@@ -135,49 +143,86 @@ ml_params <- function(tree, Xsim, method = c("mvSLOUCH", "rpf", "pic")){
 # ================== run ML inference for tree with n = 4 ======================
 
 # mvSLOUCH
-mlparams_mvs_4 <- sapply(1:length(l_seq_4), 
-                         function(i){ml_params(tree = TREES_4[[i]], 
-                                               Xsim = Xsim_4[[i]],
-                                               method = "mvSLOUCH")})
+mlparams_mvs_4 <- lapply(1:length(l_seq_4), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_4[[i]], Xsim = Xsim_4[[i]][[k]],
+              method = "mvSLOUCH")
+  })
+})
 
 # rpf (mvMORPH)
-mlparams_rpf_4 <- sapply(1:length(l_seq_4), 
-                         function(i){ml_params(tree = TREES_4[[i]], 
-                                               Xsim = Xsim_4[[i]],
-                                               method = "rpf")})
+mlparams_rpf_4 <- lapply(1:length(l_seq_4), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_4[[i]], Xsim = Xsim_4[[i]][[k]],
+              method = "rpf")
+  })
+})
 
 # pic (mvMORPH)
-mlparams_pic_4 <- sapply(1:length(l_seq_4), 
-                         function(i){ml_params(tree = TREES_4[[i]], 
-                                               Xsim = Xsim_4[[i]],
-                                               method = "pic")})
+mlparams_pic_4 <- lapply(1:length(l_seq_4), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_4[[i]], Xsim = Xsim_4[[i]][[k]],
+              method = "pic")
+  })
+})
 
 
 # ================= run ML inference for tree with n = 100 =====================
 
 # mvSLOUCH
-mlparams_mvs_100 <- sapply(1:length(l_seq_100), 
-                         function(i){ml_params(tree = TREES_100[[i]], 
-                                               Xsim = Xsim_100[[i]],
-                                               method = "mvSLOUCH")})
+mlparams_mvs_100 <- lapply(1:length(l_seq_100), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_100[[i]], Xsim = Xsim_100[[i]][[k]],
+              method = "mvSLOUCH")
+  })
+})
 
 # rpf (mvMORPH)
-mlparams_rpf_100 <- sapply(1:length(l_seq_100), 
-                         function(i){ml_params(tree = TREES_100[[i]], 
-                                               Xsim = Xsim_100[[i]],
-                                               method = "rpf")})
+mlparams_rpf_100 <- lapply(1:length(l_seq_100), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_100[[i]], Xsim = Xsim_100[[i]][[k]],
+              method = "rpf")
+  })
+})
 
 # pic (mvMORPH)
-mlparams_pic_100 <- sapply(1:length(l_seq_100), 
-                         function(i){ml_params(tree = TREES_100[[i]], 
-                                               Xsim = Xsim_100[[i]],
-                                               method = "pic")})
+mlparams_pic_100 <- lapply(1:length(l_seq_100), function(i){
+  sapply(1:10, function(k){
+    ml_params(tree = TREES_100[[i]], Xsim = Xsim_100[[i]][[k]],
+              method = "pic")
+  })
+})
 
 
 
+# ============================== process results ===============================
+# n = 4
+res_mlparams_mvs_4 <- sapply(mlparams_mvs_4, rowMeans)
+res_mlparams_rpf_4 <- sapply(mlparams_rpf_4, rowMeans)
+res_mlparams_pic_4 <- sapply(mlparams_pic_4, rowMeans)
 
-# ============================= plot the results ===============================
-# prepare the colors
+# combine into one variable
+# combine the mean into one variable for each n
+res_4 <- list(res_mlparams_mvs_4, 
+              res_mlparams_rpf_4, 
+              res_mlparams_pic_4)
+
+# n = 100
+res_mlparams_mvs_100 <- sapply(mlparams_mvs_100, rowMeans)
+res_mlparams_rpf_100 <- sapply(mlparams_rpf_100, rowMeans)
+res_mlparams_pic_100 <- sapply(mlparams_pic_100, rowMeans)
+
+res_100 <- list(res_mlparams_mvs_100, 
+                res_mlparams_rpf_100, 
+                res_mlparams_pic_100)
+
+
+
+# ========================== start plotting routine ============================
+
+# prepare common variables and functions
+
+# colors
 cols <- sapply(c("skyblue1","midnightblue", "orange1"), col2rgb)/255
 col_mvs <- rgb(cols[1,3], cols[2,3], cols[3,3], 0.7)
 col_rpf <- rgb(cols[1,2], cols[2,2], cols[3,2], 0.7)
@@ -191,100 +236,99 @@ mains <- c(expression(hat(X[0])^{(1)}),
            expression(paste(hat(Sigma), "[2,2]")),
            "max. log-lik.")
 
-
-# prepare the layout
-Mplots <- matrix(1:(2*6), nrow = 6, byrow = TRUE)
-Mlegend <- rep(max(Mplots)+1, 2)
-Mcol <- c(rep(max(Mlegend)+1, 2))
-Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
-
-M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
-heights <- c(1, rep(5, 6), 3)
-widths <- c(2, 5,5)
-
-
 # prepare limits
 xid <- c(1, seq(20, 100, by = 20))
 i_zoomed <- 15
 xid_zoomed <- c(1, seq(5, i_zoomed, by = 5))
 
 
-ylims_zoomed_4 <- rbind(c(-5, 5),
-                        c(-5, 5),
-                        c(0, 15),
-                        c(-1, 15),
-                        c(0, 15),
-                        c(-15, 10))
+# function to plot one column of results
+plot_column <- function(res, ylims, full){
+  
+  n <- dim(res[[1]])[2]
+  
+  l_seq <- if(n==100) l_seq_4 else l_seq_100
+  ids <- if(full) xid else xid_zoomed
+  max_id <- ifelse(full, length(l_seq), max(ids))
+  
+  for (i in 1:6){
+    plot(res[[3]][i,1:max_id], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o", ylim = ylims[i,])
+    grid()
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    lines(res[[3]][i,1:max_id], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(res[[2]][i,1:max_id], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(res[[1]][i,1:max_id], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = ids, labels = formatC(l_seq[ids], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+  }
+}
 
-ylims_4 <- rbind(c(-5, 5),
-                 c(-5, 5),
-                 c(0, 15),
-                 c(-1, 15),
-                 c(0, 15),
-                 c(-15, 30))
+# prepare the layout matrix
+Mplots <- cbind(matrix(1:(2*6), ncol = 2), rep(0,6), matrix(12 + 1:(2*6), ncol = 2))
+Mlegend <- rep(max(Mplots)+1, 5)
+Mcol <- c(rep(max(Mlegend)+1,2), 0, rep(max(Mlegend)+2,2))
+Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
+M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
+heights <- c(1, rep(5, 6), 3)
+widths <- c(2, 5, 5, 0.5, 5, 5)
 
 
-ylims_zoomed_100 <- rbind(c(-3, 3),
-                          c(-3, 3),
-                          c(0, 15),
-                          c(-1, 15),
-                          c(0, 15),
-                          c(-310, -220))
 
-ylims_100 <- rbind(c(-3, 3),
-                   c(-3, 3),
-                   c(0, 15),
-                   c(-1, 15),
-                   c(0, 15),
-                   c(-280, -160))
-
-
-# ============================ divide into 2 plots =============================
-# ===================== 1st plot: n = 4 =====================
 
 {
-  svg("ML_compare_n4_v2.svg", width = 25, height = 25) 
-  layout(mat = M, heights = heights, widths = widths)
-  # ---------------------------- plot the results ---------------------------
-  par(mar = c(4.1, 4.1, 3.1, 4.1))
-  for (i in 1:6){
-    # ------------------------------ plot for n = 4 ------------------------------
-    # ---------------------- zoomed in scale ----------------------
-    plot(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_4[i,])
-    grid()
-    abline(h = truevalues[i], lty = 2, lwd = 2)
-    lines(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
-          lwd = 2)
-    lines(mlparams_rpf_4[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
-          lty = 2, lwd = 2)
-    lines(mlparams_mvs_4[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
-    
-    axis(1, at = xid_zoomed, labels = formatC(l_seq_4[xid_zoomed], format = "e", digits = 2), 
-         cex.axis = 2, line = 1.5)
-    axis(2, cex.axis = 2, line = 1.5)
-    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
-    
-    
-    # ---------------------- full scale ----------------------
-    plot(mlparams_pic_4[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o", ylim = ylims_4[i,])
-    grid()
-    abline(h = truevalues[i], lty = 2, lwd = 2)
-    lines(mlparams_pic_4[i,], pch = 16, col = col_pic, type = "o", cex = 2,
-          lwd = 2)
-    lines(mlparams_rpf_4[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
-          lty = 2, lwd = 2)
-    lines(mlparams_mvs_4[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
-    
-    axis(1, at = xid, labels = formatC(l_seq_4[xid], format = "e", digits = 2), 
-         cex.axis = 2, line = 1.5)
-    axis(2, cex.axis = 2, line = 1.5)
-    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
-    
-  }
+  svg(filename = "sc2.svg", width = 30, height = 25)
   
-  # ---------------------------- plot legend ---------------------------
+  # -------------------------- results plots --------------------------
+  layout(mat = M, heights = heights, widths = widths)
+  par(mar = c(5.1, 4.1, 3.1, 4.1))
+  
+  # -------------------------- n = 4 --------------------------
+  ylims_part <- matrix(c(-2,2,
+                         -2,2,
+                         0,10,
+                         0,10,
+                         0,10,
+                         -15, 0), 
+                       ncol = 2, byrow = TRUE)
+  ylims_full <- matrix(c(-2,2,
+                         -2,2,
+                         0,10,
+                         0,10,
+                         0,10,
+                         -15, 30), 
+                       ncol = 2, byrow = TRUE)
+  
+  plot_column(res = res_4, ylims = ylims_part, full = FALSE)
+  plot_column(res = res_4, ylims = ylims_full, full = TRUE)
+  
+  
+  # -------------------------- n = 100 --------------------------
+  ylims_part <- matrix(c(-2,2,
+                         -2,2,
+                         0,10,
+                         0,10,
+                         0,10,
+                         -250, -230), 
+                       ncol = 2, byrow = TRUE)
+  ylims_full <- matrix(c(-2,2,
+                         -2,2,
+                         0,10,
+                         0,10,
+                         0,10,
+                         -250, -200), 
+                       ncol = 2, byrow = TRUE)
+  
+  plot_column(res = res_100, ylims = ylims_part, full = FALSE)
+  plot_column(res = res_100, ylims = ylims_full, full = TRUE)
+  
+  
+  # -------------------------- legend --------------------------
   par(mar = c(0,0,0,0))
   plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
   legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
@@ -292,107 +336,20 @@ ylims_100 <- rbind(c(-3, 3),
          col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
          horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
   
-  # ---------------------------- plot column names ---------------------------
+  
+  # -------------------------- titles --------------------------
   plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
   text(0,0, paste0("n = 4"), font = 2, cex  = 5)
   
-  
-  # ---------------------------- plot row names ---------------------------
-  for (i in 1:6){
-    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-    text(0,0, mains[i], font = 2, cex  = 4)
-  }
-  dev.off()
-}
-
-
-# ===================== 2nd plot: n = 100 =====================
-{
-  svg("ML_compare_n100_v2.svg", width = 25, height = 25) 
-  layout(mat = M, heights = heights, widths = widths)
-  # ---------------------------- plot the results ---------------------------
-  par(mar = c(4.1, 4.1, 3.1, 4.1))
-  for (i in 1:6){
-    # ------------------------------ plot for n = 4 ------------------------------
-    # ---------------------- zoomed in scale ----------------------
-    plot(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_100[i,])
-    grid()
-    abline(h = truevalues[i], lty = 2, lwd = 2)
-    lines(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
-          lwd = 2)
-    lines(mlparams_rpf_100[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
-          lty = 2, lwd = 2)
-    lines(mlparams_mvs_100[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
-    
-    axis(1, at = xid_zoomed, labels = formatC(l_seq_100[xid_zoomed], format = "e", digits = 2), 
-         cex.axis = 2, line = 1.5)
-    axis(2, cex.axis = 2, line = 1.5)
-    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
-    
-    # ---------------------- full scale ----------------------
-    plot(mlparams_pic_100[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
-         xlab = "", ylab = "", type = "o", ylim = ylims_100[i,])
-    grid()
-    abline(h = truevalues[i], lty = 2, lwd = 2)
-    lines(mlparams_pic_100[i,], pch = 16, col = col_pic, type = "o", cex = 2,
-          lwd = 2)
-    lines(mlparams_rpf_100[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
-          lty = 2, lwd = 2)
-    lines(mlparams_mvs_100[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
-    
-    axis(1, at = xid, labels = formatC(l_seq_100[xid], format = "e", digits = 2), 
-         cex.axis = 2, line = 1.5)
-    axis(2, cex.axis = 2, line = 1.5)
-    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
-    
-  }
-  
-  # ---------------------------- plot legend ---------------------------
-  par(mar = c(0,0,0,0))
-  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-  legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
-         lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
-         col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
-         horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
-  
-  # ---------------------------- plot column names ---------------------------
   plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
   text(0,0, paste0("n = 100"), font = 2, cex  = 5)
   
   
-  # ---------------------------- plot row names ---------------------------
+  # -------------------------- parameter names --------------------------
   for (i in 1:6){
     plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
     text(0,0, mains[i], font = 2, cex  = 4)
   }
+  
   dev.off()
 }
-
-# ----------> plot in svg to preserve the \ell symbol
-# ----------> later converted to pdf
-
-
-
-
-# =================== check ML estimates ===================
-# # minimum length of l for mvSLOUCH:
-# l_seq_4[max(which(!is.na(mlparams_mvs_4[6,])))]
-# l_seq_100[max(which(!is.na(mlparams_mvs_100[6,])))]
-# 
-# # parameter values
-# mlparams_mvs_4[,max(which(!is.na(mlparams_mvs_4[6,])))]
-# mlparams_mvs_100[,max(which(!is.na(mlparams_mvs_100[6,])))]
-# 
-# # # minimum length of l for rpf:
-# l_seq_4[tail(which(!is.na(mlparams_rpf_4[6,])), 2)]
-# mlparams_rpf_4[,max(which(!is.na(mlparams_rpf_4[6,])))]
-# 
-# # # minimum length of l for pic:
-# l_seq_100[max(which(!is.na(mlparams_pic_100[6,])))]
-# mlparams_pic_4[,100]
-# mlparams_pic_100[,dim(mlparams_pic_100)[2]]
-
-
-
-
