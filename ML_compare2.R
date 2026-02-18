@@ -166,6 +166,11 @@ mlparams_pic_4 <- lapply(1:length(l_seq_4), function(i){
   })
 })
 
+# save results
+save(mlparams_mvs_4, file = "mlparams_mvs_4.RData")
+save(mlparams_rpf_4, file = "mlparams_rpf_4.RData")
+save(mlparams_pic_4, file = "mlparams_pic_4.RData")
+
 
 # ================= run ML inference for tree with n = 100 =====================
 
@@ -193,9 +198,25 @@ mlparams_pic_100 <- lapply(1:length(l_seq_100), function(i){
   })
 })
 
+# save results
+save(mlparams_mvs_100, file = "mlparams_mvs_100.RData")
+save(mlparams_rpf_100, file = "mlparams_rpf_100.RData")
+save(mlparams_pic_100, file = "mlparams_pic_100.RData")
+
 
 
 # ============================== process results ===============================
+
+# load results
+load(file = "mlparams_mvs_4.RData")
+load(file = "mlparams_rpf_4.RData")
+load(file = "mlparams_pic_4.RData")
+
+load(file = "mlparams_mvs_100.RData")
+load(file = "mlparams_rpf_100.RData")
+load(file = "mlparams_pic_100.RData")
+
+
 # n = 4
 res_mlparams_mvs_4 <- sapply(mlparams_mvs_4, rowMeans)
 res_mlparams_rpf_4 <- sapply(mlparams_rpf_4, rowMeans)
@@ -270,19 +291,23 @@ plot_column <- function(res, ylims, full){
 }
 
 # prepare the layout matrix
-Mplots <- cbind(matrix(1:(2*6), ncol = 2), rep(0,6), matrix(12 + 1:(2*6), ncol = 2))
-Mlegend <- rep(max(Mplots)+1, 5)
-Mcol <- c(rep(max(Mlegend)+1,2), 0, rep(max(Mlegend)+2,2))
-Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
-M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
-heights <- c(1, rep(5, 6), 3)
-widths <- c(2, 5, 5, 0.5, 5, 5)
+M4 <- matrix(1:(2*6), ncol = 2)
+M100 <- M4 + max(M4)
+Mplots <- rbind(M4, c(0,0), M100)
+Mlegend <- rep(max(Mplots)+1, 3)
+Mtitle4 <- rep(max(Mlegend)+1, 2)
+Mtitle100 <- rep(max(Mlegend)+2, 2)
+Mrow <- c(0, max(Mtitle100)+(1:6), c(0,0), max(Mtitle100)+(1:6)+6)
+M <- rbind(cbind(Mrow, rbind(Mtitle4, M4, c(0,0), Mtitle100, M100)), Mlegend)
+
+heights <- c(1, rep(5, 6), 2, 1, rep(5, 6), 3)
+widths <- c(2, 5, 5)
 
 
 
 
 {
-  svg(filename = "sc2.svg", width = 30, height = 25)
+  svg(filename = "sc2.svg", width = 30, height = 40)
   
   # -------------------------- results plots --------------------------
   layout(mat = M, heights = heights, widths = widths)
@@ -346,9 +371,11 @@ widths <- c(2, 5, 5, 0.5, 5, 5)
   
   
   # -------------------------- parameter names --------------------------
-  for (i in 1:6){
-    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-    text(0,0, mains[i], font = 2, cex  = 4)
+  for (k in 1:2){
+    for (i in 1:6){
+      plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+      text(0,0, mains[i], font = 2, cex  = 4)
+    }
   }
   
   dev.off()
