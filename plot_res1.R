@@ -112,13 +112,17 @@ plot_column <- function(res, ylims, full){
 }
 
 # prepare the layout matrix
-Mplots <- cbind(matrix(1:(2*6), ncol = 2), rep(0,6), matrix(12 + 1:(2*6), ncol = 2))
-Mlegend <- rep(max(Mplots)+1, 5)
-Mcol <- c(rep(max(Mlegend)+1,2), 0, rep(max(Mlegend)+2,2))
-Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
-M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
-heights <- c(1, rep(5, 6), 3)
-widths <- c(2, 5, 5, 0.5, 5, 5)
+M4 <- matrix(1:(2*6), ncol = 2)
+M100 <- M4 + max(M4)
+Mplots <- rbind(M4, c(0,0), M100)
+Mlegend <- rep(max(Mplots)+1, 3)
+Mtitle4 <- rep(max(Mlegend)+1, 2)
+Mtitle100 <- rep(max(Mlegend)+2, 2)
+Mrow <- c(0, max(Mtitle100)+(1:6), c(0,0), max(Mtitle100)+(1:6)+6)
+M <- rbind(cbind(Mrow, rbind(Mtitle4, M4, c(0,0), Mtitle100, M100)), Mlegend)
+
+heights <- c(1, rep(5, 6), 2, 1, rep(5, 6), 3)
+widths <- c(2, 5, 5)
 
 
 
@@ -150,7 +154,7 @@ res_100 <- list(res_ml1_mvs_100,
                 res_ml1_pic_100)
 
 {
-  svg(filename = "sc1_case1.svg", width = 30, height = 25)
+  svg(filename = "sc1_case1.svg", width = 30, height = 40)
   
   # -------------------------- results plots --------------------------
   layout(mat = M, heights = heights, widths = widths)
@@ -214,9 +218,11 @@ res_100 <- list(res_ml1_mvs_100,
   
   
   # -------------------------- parameter names --------------------------
-  for (i in 1:6){
-    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-    text(0,0, mains[i], font = 2, cex  = 4)
+  for (k in 1:2){
+    for (i in 1:6){
+      plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+      text(0,0, mains[i], font = 2, cex  = 4)
+    }
   }
   
   dev.off()
@@ -271,7 +277,7 @@ res_100 <- list(res_ml2_mvs_100_single,
                 res_ml2_pic_100_single)
 
 {
-  svg(filename = "sc1_case2.svg", width = 30, height = 25)
+  svg(filename = "sc1_case2.svg", width = 30, height = 40)
   
   # -------------------------- results plots --------------------------
   layout(mat = M, heights = heights, widths = widths)
@@ -335,9 +341,11 @@ res_100 <- list(res_ml2_mvs_100_single,
   
   
   # -------------------------- parameter names --------------------------
-  for (i in 1:6){
-    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-    text(0,0, mains[i], font = 2, cex  = 4)
+  for (k in 1:2){
+    for (i in 1:6){
+      plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+      text(0,0, mains[i], font = 2, cex  = 4)
+    }
   }
   
   dev.off()
@@ -394,7 +402,7 @@ res_100 <- list(res_ml2_mvs_100_both,
                 res_ml2_pic_100_both)
 
 {
-  svg(filename = "sc1_case3.svg", width = 30, height = 25)
+  svg(filename = "sc1_case3.svg", width = 30, height = 40)
   
   # -------------------------- results plots --------------------------
   layout(mat = M, heights = heights, widths = widths)
@@ -406,14 +414,14 @@ res_100 <- list(res_ml2_mvs_100_both,
                          0,80,
                          0,80,
                          0,80,
-                         -17, -5), 
+                         -20, 5), 
                        ncol = 2, byrow = TRUE)
   ylims_full <- matrix(c(-2,2,
                          -2,2,
                          0,max(res_4[[3]][3,], na.rm=TRUE),
                          0,max(res_4[[3]][3,], na.rm=TRUE),
                          0,max(res_4[[3]][3,], na.rm=TRUE),
-                         min(res_4[[3]][6,], na.rm=TRUE), -5), 
+                         min(res_4[[2]][6,], na.rm=TRUE), 5), 
                        ncol = 2, byrow = TRUE)
   
   plot_column(res = res_4, ylims = ylims_part, full = FALSE)
@@ -458,9 +466,11 @@ res_100 <- list(res_ml2_mvs_100_both,
   
   
   # -------------------------- parameter names --------------------------
-  for (i in 1:6){
-    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
-    text(0,0, mains[i], font = 2, cex  = 4)
+  for (k in 1:2){
+    for (i in 1:6){
+      plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+      text(0,0, mains[i], font = 2, cex  = 4)
+    }
   }
   
   dev.off()
