@@ -106,217 +106,194 @@ for (i in 1:length(l_seq_100)){
 
 
 # objective function for mvSLOUCH: given v, return loglik
-# fopt_mvs <- function(v, ntips, ids, return_obj = FALSE){
-#   # convert v to M.error
-#   
-#   # create SPD matrix
-#   L <- matrix(c(v[1], v[2], 0, v[3]), nrow = 2)
-#   M <- L %*% t(L)
-# 
-#   # create an empty list of error matrices
-#   Merror <- sapply(1:ntips, function(x){matrix(0,2,2)}, simplify=FALSE)
-# 
-#   if (length(ids) == 1){
-#     Merror[[ids]] <- M
-#   }else{
-#     Merror[[ids[1]]] <- M*0.5
-#     Merror[[ids[2]]] <- M*0.5
-#   }
-# 
-#   res <- BrownianMotionModel(phyltree = tree, mData = Xsim,
-#                              M.error = Merror)
-#   
-#   if (return_obj){
-#     return(res)
-#   }
-# 
-#   if (is.infinite(res$ParamSummary$LogLik)){
-#     return(-1e5)
-#   }else{
-#     return(res$ParamSummary$LogLik)
-#   }
-# }
-# 
-# tree <- tree_4
-# Xsim <- Xsim_4[[1]]
-# res <- fopt_mvs(v = c(0,1,0), ntips = 4, ids = c(2,3))
-# res_obj <- fopt_mvs(v = c(0,1,0), ntips = 4, ids = c(2,3), return_obj = TRUE)
-# 
-# 
-# res1 <-  mvBM(tree = tree, data = Xsim, echo = FALSE, diagnostic = FALSE)
-# init_rpf <- c(c(t(chol(res1$sigma)))[c(1,2,4)], c(res1$theta), rep(0.1,2))
+fopt_mvs <- function(v, ntips, ids, return_obj = FALSE){
+  # convert v to M.error
+
+  # create SPD matrix
+  L <- matrix(c(v[1], v[2], 0, v[3]), nrow = 2)
+  M <- L %*% t(L)
+
+  # create an empty list of error matrices
+  Merror <- sapply(1:ntips, function(x){matrix(0,2,2)}, simplify=FALSE)
+
+  if (length(ids) == 1){
+    Merror[[ids]] <- M
+  }else{
+    Merror[[ids[1]]] <- M*0.5
+    Merror[[ids[2]]] <- M*0.5
+  }
+
+  res <- BrownianMotionModel(phyltree = tree, mData = Xsim,
+                             M.error = Merror)
+
+  if (return_obj){
+    return(res)
+  }
+
+  if (is.infinite(res$ParamSummary$LogLik)){
+    return(-1e5)
+  }else{
+    return(res$ParamSummary$LogLik)
+  }
+}
+
+
+# objective function for mvMORPH: given v, return loglik
+fopt_mvm <- function(v, ntips, ids, rpf = TRUE, return_obj = FALSE){
+
+  # create an empty matrix of errors
+  Merror <- matrix(0, nrow = ntips, ncol = 2)
+
+  if (length(ids) == 1){
+    Merror[ids,] <- v
+  }else{
+    Merror[ids[1],] <- v*0.5
+    Merror[ids[2],] <- v*0.5
+  }
+  
+  method <- ifelse(rpf, "rpf", "pic")
+  
+  print(v)
+
+  res <- try(mvBM(tree = tree, data = Xsim, error = Merror, method = method,
+                  diagnostic = FALSE, echo = FALSE), silent = TRUE)
+
+  if ("try-error" %in% class(res)){
+    return(-1e6)
+  }else{
+    if (return_obj){
+      return(res)
+    }else{
+      return(res$LogLik)
+    }
+  }
+}
 
 
 
-# # design matrix
-# D <- cbind(rep(c(1,0), each = ntips), rep(c(0,1), each = ntips))
-# 
-# # variance covariance matrix
-# V <- kronecker(res1$ParamSummary$StS, vcv(tree))
-# 
-# mvLL(V, data = Xsim, method = "rpf",
-#      param = list(estim = FALSE, D = D, mu = as.vector(pars$vX0),
-#                   sigma = res1$ParamSummary$StS),
-#      error = merror4)$logl
-# 
-# 
-# 
-# 
-# 
-# 
-# # objective function for rpf: given v, return loglik
-# fopt_rpf <- function(v, ntips, ids){
-#   
-#   # Sigma (StS) from v
-#   Sxx <- matrix(c(v[1], v[2], 0, v[3]), nrow = 2)
-#   Sigma <- Sxx %*% t(Sxx)
-#   
-#   # mean ancestral
-#   vX0 <- v[4:5]
-#   
-#   # matrix of errors
-#   Merror <- matrix(0, nrow = ntips, ncol = 2)
-#   
-#   if (length(ids) == 1){
-#     Merror[ids,] <- c(v[6], v[7])
-#   }else{
-#     Merror[ids[1],] <- c(v[6], v[7])*0.5
-#     Merror[ids[2],] <- c(v[6], v[7])*0.5
-#   }
-#   
-#   # design matrix
-#   D <- cbind(rep(c(1,0), each = ntips), rep(c(0,1), each = ntips))
-#   
-#   # variance covariance matrix
-#   V <- kronecker(Sigma, vcv(tree))
-#   
-#   res <- try(mvLL(V, data = Xsim, method = "rpf",
-#               param = list(estim = FALSE, D = D, mu = vX0,
-#                            sigma = Sigma),
-#               error = Merror)$logl, silent = TRUE)
-#   
-#   if ("try-error" %in% class(res)){
-#     return(-1e6)
-#   }else{
-#     return(res)
-#   }
-# }
-# 
-# 
-# lb <- c(0, -100, 0, -100, -100, 0, 0)
-# ub <- c(100, 100, 100, 100, 100, 100, 100)
-# optim(par = init_rpf, fn = fopt_rpf, method = "L-BFGS-B",
-#       lower = lb, upper = ub, control = list(fnscale = -1),
-#       ntips = 4, ids = 3)
-# 
-# fopt_rpf(v=init_rpf+rnorm(7, sd=0.01), ntips=4, ids=3)
-# 
-# 
-# 
 # main function
-# ml_me <- function(tree, Xsim, method, single = TRUE){
-# 
-#   # number of tips
-#   ntips <- Ntip(tree)
-# 
-#   # short tip indices
-#   st <- if(ntips==4) st_4 else st_100
-# 
-#   # branches indices to tips indices
-#   if (single == TRUE){
-#     ids <- tree$edge[st[3],2]
-#   }else{
-#     ids <- tree$edge[st[2:3],2]
-#   }
-# 
-#   if (method == "mvSLOUCH"){
-#     # initial ML estimates with zero measurement errors
-#     res1 <- mvSLOUCH::BrownianMotionModel(phyltree = tree, mData = Xsim)
-#     
-#     if (res1$ParamSummary$LogLik < -1e6){
-#       return(rep(NA,9))
-#     }
-#     
-#     # set lower and upper bound of optimization
-#     lb <- c(0, -100, 0)
-#     ub <- c(100, 100, 100)
-# 
-#     # run optim
-#     opt_res <- optim(par = c(0,0,0), fn = fopt_mvs, method = "L-BFGS-B",
-#                      lower = lb, upper = ub, control = list(fnscale = -1),
-#                      ntips = ntips, ids = ids)
-#     
-#     
-# 
-#     # return optim results if loglik is better
-#     if (opt_res$value > res1$ParamSummary$LogLik){
-#       res2 <- fopt_mvs(v = opt_res$par, ntips = ntips, ids = ids, 
-#                        return_obj = TRUE)
-#       return(c(c(res2$ParamsInModel$vX0), c(res2$ParamSummary$StS)[c(1,2,4)],
-#                opt_res$par, res2$ParamSummary$LogLik))
-#     }else{
-#       return(c(c(res1$ParamsInModel$vX0), c(res1$ParamSummary$StS)[c(1,2,4)],
-#                rep(0,3), res1$ParamSummary$LogLik))
-#     }
-#   }
-# 
-#   if (method == "rpf"){
-#     # initial ML estimates
-#     res1 <- try(mvBM(tree = tree, data = Xsim,
-#                      echo = FALSE, diagnostic = FALSE), silent = TRUE)
-# 
-#     if ("try-error" %in% class(res1)){
-#       return(rep(NA,7))
-#     }
-# 
-#     # if not, extract initial param
-#     init_rpf <- c(c(t(chol(res1$sigma)))[c(1,2,4)], c(res1$theta), rep(0.1,2))
-# 
-#     # set lower and upper bound of optimization
-#     lb <- c(0, -100, 0, -100, -100, 0, 0)
-#     ub <- c(100, 100, 100, 100, 100, 100, 100)
-# 
-#     # run optim
-#     opt_res <- optim(par = init_rpf, fn = fopt_rpf, method = "L-BFGS-B",
-#                      lower = lb, upper = ub, control = list(fnscale = -1),
-#                      ntips = ntips, ids = ids)
-# 
-#     # return optim results if loglik is better
-#     if (opt_res$value > res1$LogLik){
-#       
-#       return(c(opt_res$par, opt_res$value))
-#     }else{
-#       return(c(c(res1$theta), c(res1$sigma)[c(1,2,4)],
-#                rep(0,2), res1$LogLik))
-#     }
-#   }
-# }
-# 
-# 
-# # initial ML optimization
-# tree <- TREES_4[[2]]
-# Xsim <- Xsim_4[[2]]
-#  
-# times_4_3_single <- c()
-# 
-# timestamp()
-# start <- Sys.time()
-# test_mvs <- ml_me(tree = tree, Xsim = Xsim, method = "mvSLOUCH",
-#                   single = FALSE)
-# times_4_3_single[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
-# timestamp()
-# 
-# 
-# 
-# tree <- TREES_100[[2]]
-# Xsim <- Xsim_100[[2]]
-# times_100_3_single <- c()
-# timestamp()
-# start <- Sys.time()
-# test_mvs <- ml_me(tree = tree, Xsim = Xsim, method = "mvSLOUCH",
-#                   single = FALSE)
-# times_100_3_single[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
-# timestamp()
+ml_me <- function(tree, Xsim, method, single = TRUE){
+
+  # number of tips
+  ntips <- Ntip(tree)
+
+  # short tip indices
+  st <- if(ntips==4) st_4 else st_100
+
+  # branches indices to tips indices
+  if (single == TRUE){
+    ids <- tree$edge[st[3],2]
+  }else{
+    ids <- tree$edge[st[2:3],2]
+  }
+
+  if (method == "mvSLOUCH"){
+    # initial ML estimates with zero measurement errors
+    res1 <- mvSLOUCH::BrownianMotionModel(phyltree = tree, mData = Xsim)
+    
+    # return NA if immediately infinite loglik
+    if (res1$ParamSummary$LogLik < -1e6){
+      return(rep(NA,9))
+    }
+
+    # set lower and upper bound of optimization
+    lb <- c(0, -100, 0)
+    ub <- c(100, 100, 100)
+
+    # run optim
+    opt_res <- optim(par = c(4,4,4), fn = fopt_mvs, method = "L-BFGS-B",
+                     lower = lb, upper = ub, control = list(fnscale = -1),
+                     ntips = ntips, ids = ids)
 
 
-# test_rpf <- ml_me(tree, Xsim, method = "rpf")
+    # return optim results if loglik is better
+    if (opt_res$value > res1$ParamSummary$LogLik){
+      res2 <- fopt_mvs(v = opt_res$par, ntips = ntips, ids = ids,
+                       return_obj = TRUE)
+      return(c(c(res2$ParamsInModel$vX0), c(res2$ParamSummary$StS)[c(1,2,4)],
+               opt_res$par, res2$ParamSummary$LogLik))
+    }else{
+      return(c(c(res1$ParamsInModel$vX0), c(res1$ParamSummary$StS)[c(1,2,4)],
+               rep(0,3), res1$ParamSummary$LogLik))
+    }
+  }
+
+  else{
+    # initial ML estimates
+    res1 <- try(mvBM(tree = tree, data = Xsim,
+                     echo = FALSE, diagnostic = FALSE), silent = TRUE)
+
+    if ("try-error" %in% class(res1)){
+      return(rep(NA,7))
+    }
+
+    # set lower and upper bound of optimization
+    lb <- c(0, 0)
+    ub <- c(100, 100)
+    
+    rpf <- (method == "rpf")
+
+    # run optim
+    opt_res <- optim(par = c(2,2), fn = fopt_mvm, method = "L-BFGS-B",
+                     lower = lb, upper = ub, control = list(fnscale = -1),
+                     ntips = ntips, ids = ids, rpf = rpf)
+
+    # return optim results if loglik is better
+    if (opt_res$value > res1$LogLik){
+
+      return(c(opt_res$par, opt_res$value))
+    }else{
+      return(c(c(res1$theta), c(res1$sigma)[c(1,2,4)],
+               rep(0,2), res1$LogLik))
+    }
+  }
+}
+
+
+# # case 1: mvSLOUCH ~ 3 minutes, mvMORPH crashes
+# tree <- TREES_4[[3]]
+# Xsim <- Xsim_4[[3]]
+# 
+# times_opt <- c()
+# 
+# # mvSLOUCH test runs
+# timestamp()
+# start <- Sys.time()
+# res_mvs <- ml_me(tree = tree, Xsim = Xsim, method = "mvSLOUCH")
+# times_opt[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+# timestamp()
+# 
+# save(times_opt, file = "times_opt.RData")
+# 
+# # mvMORPH
+# timestamp()
+# start <- Sys.time()
+# res_pic <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
+# times_opt[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+# timestamp()
+
+# case 2: mvSLOUCH ~ 20 minutes, mvMORPH alternating 
+# between 2-3 points indefinitely
+tree <- TREES_4[[5]]
+Xsim <- Xsim_4[[5]]
+
+# mvSLOUCH test runs
+times_opt <- c()
+timestamp()
+start <- Sys.time()
+res_mvs <- ml_me(tree = tree, Xsim = Xsim, method = "mvSLOUCH")
+times_opt[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+timestamp()
+save(times_opt, file = "times_opt.RData")
+
+# mvMORPH
+timestamp()
+start <- Sys.time()
+res_pic <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
+times_opt[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+timestamp()
+
+save(times_opt, file = "times_opt.RData")
+
+
+
