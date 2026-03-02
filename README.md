@@ -3,8 +3,10 @@
 Code for simulation study and data analysis for the article "Computational singularities in phylogenetic comparative methods" by K. Bartoszek, B. Brahmantio, J. Muñoz-Durán, J. Fuentes-González, J. Pienaar, P. D. Polly.
 
 This repository contains the following `R` scripts:
-* `ML_compare.R`
+* `ML_compare1.R`
   Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips (1st scenario).
+* `plot_res1.R`
+  Contains code to plot results of scenario 1.
 * `ML_compare2.R`
   Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips (2nd scenario).
 * `short_tip_remove.R`
