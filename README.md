@@ -9,6 +9,8 @@ This repository contains the following `R` scripts:
   Contains code to plot results of scenario 1.
 * `ML_compare2.R`
   Contains code to compare the effects of short tip branch on the maximum likelihood inference quality for trees with $n=4$ and $n=100$ tips (2nd scenario).
+* `test_me.R`
+  Contains code of test runs of ML optimization including estimation errors.
 * `short_tip_remove.R`
   Contains code to compare the choices of traits replacement in a cherry with short tip branches, tested on trees with $n = 5, 25, 50, 100$.
 * `DataPrep.R`
