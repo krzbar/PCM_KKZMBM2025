@@ -58,7 +58,7 @@ get_short_tip <- function(tree){
 # n = 4
 st_4 <- get_short_tip(tree_4)
 
-# n = 5
+# n = 100
 st_100 <- get_short_tip(tree_100)
 
 
@@ -89,7 +89,7 @@ for (i in 1:length(l_seq_4)){
 
 # for n = 100
 tree_new <- tree_100
-l_anc_edge <- tree_new$edge.length[st_100[1]]
+l_anc_edge <- sum(tree_new$edge.length[st_100[1:2]])
 for (i in 1:length(l_seq_100)){
   tree_new$edge.length[st_100[2:3]] <- l_seq_100[i]
   tree_new$edge.length[st_100[1]] <- l_anc_edge - l_seq_100[i]
