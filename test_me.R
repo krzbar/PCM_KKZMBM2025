@@ -234,7 +234,7 @@ ml_me <- function(tree, Xsim, method, single = TRUE){
     rpf <- (method == "rpf")
 
     # run optim
-    opt_res <- optim(par = c(2,2), fn = fopt_mvm, method = "L-BFGS-B",
+    opt_res <- optim(par = c(0,0), fn = fopt_mvm, method = "L-BFGS-B",
                      lower = lb, upper = ub, control = list(fnscale = -1),
                      ntips = ntips, ids = ids, rpf = rpf)
 
@@ -268,13 +268,39 @@ ml_me <- function(tree, Xsim, method, single = TRUE){
 # # mvMORPH
 # timestamp()
 # start <- Sys.time()
-# res_pic <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
+# res_rpf <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
 # times_opt[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
 # timestamp()
 
-# case 2: mvSLOUCH ~ 20 minutes, mvMORPH alternating 
+# case 2: mvSLOUCH ~ 20 minutes, mvMORPH alternating between two points
 # between 2-3 points indefinitely
-tree <- TREES_4[[5]]
+tree <- TREES_4[[9]]
+Xsim <- Xsim_4[[5]]
+
+# mvSLOUCH test runs
+# times_opt <- c()
+# timestamp()
+# start <- Sys.time()
+# res_mvs <- ml_me(tree = tree, Xsim = Xsim, method = "mvSLOUCH")
+# times_opt[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+# timestamp()
+# save(times_opt, file = "times_opt.RData")
+
+# mvMORPH
+timestamp()
+start <- Sys.time()
+res_rpf <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
+times_opt[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+timestamp()
+
+save(times_opt, file = "times_opt.RData")
+
+
+
+
+# case 3: mvSLOUCH ~ 20 minutes, mvMORPH alternating between two points
+# between 2-3 points indefinitely
+tree <- TREES_4[[25]]
 Xsim <- Xsim_4[[5]]
 
 # mvSLOUCH test runs
@@ -289,11 +315,9 @@ save(times_opt, file = "times_opt.RData")
 # mvMORPH
 timestamp()
 start <- Sys.time()
-res_pic <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
+res_rpf <- ml_me(tree = tree, Xsim = Xsim, method = "rpf")
 times_opt[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
 timestamp()
 
 save(times_opt, file = "times_opt.RData")
-
-
 
