@@ -1,0 +1,409 @@
+## These are the R scripts and numerical results accompanying 
+## Bartoszek, Brahmantio, Munoz-Duran, Fuentes-Gonzalez,Pienaar, and Polly
+## Short branch singularities in phylogenetic comparative methods
+
+## This software comes AS IS in the hope that it will be useful WITHOUT ANY WARRANTY, 
+## NOT even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+## Please understand that there may still be bugs and errors. Use it at your own risk. 
+## We take no responsibility for any errors or omissions in this code or for any misfortune 
+## that may befall you or others as a result of its use. Please send comments and report 
+## bugs to Krzysztof Bartoszek at krzbar@protonmail.ch .
+
+
+# ------ Calculate maximum likelihood given trees with short branch tips -------
+# two cases:
+# - small tree: n = 4
+# - large tree: n = 100
+library(ape)
+library(TreeSim)
+library(mvSLOUCH)
+library(mvMORPH)
+
+# random seed
+random_seeds <- 123 + 0:2
+
+# =============== create a tree with 4 tips and simulate data ==================
+tree_4 <- read.tree(text = "(y1, ((y2, y3), y4));") 
+tree_4$edge.length <- c(1, 0.5, 0.25, 0.25, 0.25, 0.5)
+
+# ----------- new tree (for plotting)
+# make the tip branch shorter
+tree_new <- tree_4
+l_new <- 0.245
+tree_new$edge.length <- c(1, 0.5, 0.25+l_new, 0.25-l_new, 0.25-l_new, 0.5)
+
+pdf("four_tips.pdf", width = 8, height = 4)
+par(mfrow = c(1,2))
+plot.phylo(tree_4, main = "A", label.offset = 0.1, edge.width = 2)
+axis(1, at = seq(0, 1, by = 0.2))
+plot.phylo(tree_new,  main = "B", label.offset = 0.1, edge.width = 2)
+axis(1, at = seq(0, 1, by = 0.2))
+dev.off()
+
+# --------------------- simulate traits at tips
+set.seed(random_seeds[1])
+X0 <- matrix(c(0, 0), ncol = 1) # ancestral trait value at the root
+Sigma <- matrix(c(1,2,2,1), nrow = 2)
+StS <- Sigma %*% t(Sigma)
+
+# vector of true parameter values
+truevalues <- c(X0, c(StS)[c(1,2,4)])
+
+# simulate
+Xsim_4 <- mvSLOUCH::simulBMProcPhylTree(phyltree = tree_4, X0 = X0, Sigma = Sigma)
+
+# ============= create a tree with 100 tips and simulate data ==================
+set.seed(random_seeds[2])
+tree_100 <- TreeSim::sim.bd.taxa(n = 100, numbsim = 1, lambda = 1, mu = 0)[[1]] 
+# normalize
+tree_100$edge.length <- tree_100$edge.length/max(nodeHeights(tree_100))
+
+# --------------------- simulate traits at tips
+set.seed(random_seeds[3])
+# simulate
+Xsim_100 <- mvSLOUCH::simulBMProcPhylTree(phyltree = tree_100, X0 = X0, Sigma = Sigma)
+
+# find the shortest tip branches in the tree
+get_short_tip <- function(tree){
+  # find which tip branch is the shortest
+  tip_id <- which(tree$edge[,2] %in% 1:Ntip(tree))
+  edge_id <- tip_id[which.min(tree$edge.length[tip_id])]
+  parent_node <- tree$edge[edge_id,1]
+  ids_desc <- which(tree$edge[,1] == parent_node) # ids of tip branch
+  id_anc <- which(tree$edge[,2] == parent_node) # id of ancestor
+  return(c(id_anc, ids_desc))
+}
+
+
+# ======================= sequence of tip branch length ========================
+n_seq <- 100
+
+# for tree_4
+l_seq_4 <- sapply(1:n_seq, function(n){0.25*((2/3)^(n-1))})
+
+# for tree_100, subset of l_seq_4 which is lower than l_stip
+l_stip <- tree_100$edge.length[get_short_tip(tree_100)[2]]
+l_seq_100 <- c(l_stip, l_seq_4[l_seq_4 < l_stip])
+
+
+# =============== ML functions given tree and branch length  ===================
+# retrieve maximum likelihood parameters given
+# branch length and simulated data
+ml_params <- function(l, tree, Xsim, method = c("mvSLOUCH", "rpf", "pic")){
+  if (length(method) == 2){
+    method <- "mvSLOUCH"
+    cat("mvSLOUCH is used \n")
+  }
+  
+  # number of tips
+  ntips <- Ntip(tree)
+  MError<-StS ## for measurement error inclusion
+  lError<-sapply(1:ntips,function(x){matrix(0,2,2)},simplify=FALSE) ## for measurement error inclusion
+  # change the tip branch length
+  if (ntips == 4){
+    tree_new <- tree
+    tree_new$edge.length[c(4,5)] <- l
+    tree_new$edge.length[3] <- 0.5 - l
+    MError<-cov(Xsim)*(0.5-l) ## for measurement error inclusion
+    v_short_bl<-c(4,5)  ## for measurement error inclusion
+  }else{
+    tree_new <- tree
+    ids_edges <- get_short_tip(tree_new)
+    l_anc_edge <- tree_new$edge.length[ids_edges[1]]
+    tree_new$edge.length[ids_edges[2:3]] <- l
+    tree_new$edge.length[ids_edges[1]] <- l_anc_edge - l
+    v_short_bl<-ids_edges[2:3] ## for measurement error inclusion
+    MError<-cov(Xsim)*(l_anc_edge-l) ## for measurement error inclusion
+  }
+  node_shortbl<-tree_new$edge[v_short_bl[2],2] ## we could symmetrically take v_short_bl[1] ## for measurement error inclusion
+  lError[[node_shortbl]]<-MError ## for measurement error inclusion
+  merror_matrix<-matrix(0,nrow=ntips,ncol=2) ## for measurement error inclusion
+  merror_matrix[node_shortbl,]<-diag(MError) ## for measurement error inclusion
+  
+# return a vector: c(x01, x02, StS11, StS12, StS22)
+  if (method == "mvSLOUCH"){
+    res <- mvSLOUCH::BrownianMotionModel(phyltree = tree_new, mData = Xsim,M.error=lError)
+    if (is.infinite(res$ParamSummary$LogLik)){
+      return(rep(NA, 6))
+    }else{
+      return(c(c(res$ParamsInModel$vX0), c(res$ParamSummary$StS)[c(1,2,4)],
+               res$ParamSummary$LogLik))
+    }
+    
+  }else{
+    if (method %in% c("rpf", "pic")){
+      res <- try(mvMORPH::mvBM(tree = tree_new, data = Xsim, method = method, 
+                               echo = FALSE, error=merror_matrix), silent = TRUE)
+      if ("try-error" %in% class(res)){
+        return(rep(NA, 6))
+      }else{
+        return(c(res$theta, res$sigma[c(1,2,4)], res$LogLik))
+      }
+    }
+  }
+}
+
+
+
+# ================== run ML inference for tree with n = 4 ======================
+
+# for measuring time
+times_4 <- c()
+
+# mvSLOUCH
+start <- Sys.time()
+mlparams_mvs_4 <- sapply(l_seq_4, ml_params, tree = tree_4, Xsim = Xsim_4, 
+                         method = "mvSLOUCH")
+times_4[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+# rpf (mvMORPH)
+start <- Sys.time()
+mlparams_rpf_4 <- sapply(l_seq_4, ml_params, tree = tree_4, Xsim = Xsim_4, 
+                         method = "rpf")
+times_4[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+# pic (mvMORPH)
+start <- Sys.time()
+mlparams_pic_4 <- sapply(l_seq_4, ml_params, tree = tree_4, Xsim = Xsim_4, 
+                         method = "pic")
+times_4[3] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+
+# ================= run ML inference for tree with n = 100 =====================
+
+# for measuring time
+times_100 <- c()
+
+# mvSLOUCH
+start <- Sys.time()
+mlparams_mvs_100 <- sapply(l_seq_100, ml_params, tree = tree_100, Xsim = Xsim_100, 
+                           method = "mvSLOUCH")
+times_100[1] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+# rpf (mvMORPH)
+start <- Sys.time()
+mlparams_rpf_100 <- sapply(l_seq_100, ml_params, tree = tree_100, Xsim = Xsim_100, 
+                           method = "rpf")
+times_100[2] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+# pic (mvMORPH)
+start <- Sys.time()
+mlparams_pic_100 <- sapply(l_seq_100, ml_params, tree = tree_100, Xsim = Xsim_100, 
+                           method = "pic")
+times_100[3] <- as.numeric(difftime(Sys.time(), start, units = "secs"))
+
+
+
+# ============================= plot the results ===============================
+# prepare the colors
+cols <- sapply(c("skyblue1","midnightblue", "orange1"), col2rgb)/255
+col_mvs <- rgb(cols[1,3], cols[2,3], cols[3,3], 0.7)
+col_rpf <- rgb(cols[1,2], cols[2,2], cols[3,2], 0.7)
+col_pic <- rgb(cols[1,1], cols[2,1], cols[3,1], 0.7)
+
+# title for the subplots
+mains <- c(expression(hat(X[0])^{(1)}),
+           expression(hat(X[0])^{(2)}),
+           expression(paste(hat(Sigma), "[1,1]")),
+           expression(paste(hat(Sigma), "[1,2]")),
+           expression(paste(hat(Sigma), "[2,2]")),
+           "max. log-lik.")
+
+
+# prepare the layout
+Mplots <- matrix(1:(2*6), nrow = 6, byrow = TRUE)
+Mlegend <- rep(max(Mplots)+1, 2)
+Mcol <- c(rep(max(Mlegend)+1, 2))
+Mrow <- c(0, (max(Mcol)+1):(max(Mcol)+6), 0)
+
+M <- cbind(Mrow, rbind(Mcol, Mplots, Mlegend))
+heights <- c(1, rep(5, 6), 3)
+widths <- c(2, 5,5)
+
+
+# prepare limits
+xid <- c(1, seq(20, 100, by = 20))
+i_zoomed <- 15
+xid_zoomed <- c(1, seq(5, i_zoomed, by = 5))
+
+
+ylims_zoomed_4 <- rbind(c(-2, 2),
+                        c(-2, 2),
+                        c(4, 85),
+                        c(-24, 5),
+                        c(1, 11),
+                        c(-17, -10))
+
+ylims_4 <- rbind(c(-2, 2),
+                        c(-2, 2),
+                        c(4, 100),
+                        c(-50, 50),
+                        c(1, 50),
+                        c(-80, 0))
+
+ylims_zoomed_100 <- rbind(c(-2, 2),
+                          c(-2, 2),
+                          c(0, 10),
+                          c(0, 10),
+                          c(0, 20),
+                          c(-310, -220))
+
+
+# ============================ divide into 2 plots =============================
+# ===================== 1st plot: n = 4 =====================
+
+{
+  svg("ML_compare_n4.svg", width = 25, height = 25) 
+  layout(mat = M, heights = heights, widths = widths)
+  # ---------------------------- plot the results ---------------------------
+  par(mar = c(4.1, 4.1, 3.1, 4.1))
+  for (i in 1:6){
+    # ------------------------------ plot for n = 4 ------------------------------
+    # ---------------------- zoomed in scale ----------------------
+    plot(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE,
+         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_4[i,])
+    grid()
+    lines(mlparams_pic_4[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_4[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_4[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid_zoomed, labels = formatC(l_seq_4[xid_zoomed], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    
+    # ---------------------- full scale ----------------------
+    plot(mlparams_pic_4[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o", ylim = ylims_4[i,])
+    grid()
+    lines(mlparams_pic_4[i,], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_4[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_4[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid, labels = formatC(l_seq_4[xid], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    
+  }
+  
+  # ---------------------------- plot legend ---------------------------
+  par(mar = c(0,0,0,0))
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
+         lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
+         col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
+         horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
+  
+  # ---------------------------- plot column names ---------------------------
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  text(0,0, paste0("n = 4"), font = 2, cex  = 5)
+  
+  
+  # ---------------------------- plot row names ---------------------------
+  for (i in 1:6){
+    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+    text(0,0, mains[i], font = 2, cex  = 4)
+  }
+  dev.off()
+}
+
+# ===================== 2nd plot: n = 100 =====================
+{
+  svg("ML_compare_n100.svg", width = 25, height = 25) 
+  layout(mat = M, heights = heights, widths = widths)
+  # ---------------------------- plot the results ---------------------------
+  par(mar = c(4.1, 4.1, 3.1, 4.1))
+  for (i in 1:6){
+    # ------------------------------ plot for n = 4 ------------------------------
+    # ---------------------- zoomed in scale ----------------------
+    plot(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o", ylim = ylims_zoomed_100[i,])
+    grid()
+    lines(mlparams_pic_100[i,1:i_zoomed], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_100[i,1:i_zoomed], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_100[i,1:i_zoomed], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid_zoomed, labels = formatC(l_seq_100[xid_zoomed], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    abline(h = truevalues[i], lty = 2, lwd = 2)
+    
+    # ---------------------- full scale ----------------------
+    plot(mlparams_pic_100[i,], pch = 16, col = rgb(0,0,0,0), axes = FALSE, 
+         xlab = "", ylab = "", type = "o")
+    grid()
+    lines(mlparams_pic_100[i,], pch = 16, col = col_pic, type = "o", cex = 2,
+          lwd = 2)
+    lines(mlparams_rpf_100[i,], pch = 5, col = col_rpf, type = "o", cex = 2,
+          lty = 2, lwd = 2)
+    lines(mlparams_mvs_100[i,], pch = 17, col = col_mvs, type = "o", cex = 2)
+    
+    axis(1, at = xid, labels = formatC(l_seq_100[xid], format = "e", digits = 2), 
+         cex.axis = 2, line = 1.5)
+    axis(2, cex.axis = 2, line = 1.5)
+    mtext(bquote("\U2113"[i]), side = 1, line = 5, cex = 2)
+    
+  }
+  
+  # ---------------------------- plot legend ---------------------------
+  par(mar = c(0,0,0,0))
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  legend("center", legend = c("true value", "mvSLOUCH", "mvMORPH (rpf)", "mvMORPH (pic)"),
+         lty = c(2,1,2,1), pch = c(NA, 17, 5, 16), 
+         col = c("black", "orange1", "midnightblue", "skyblue1"), lwd = c(2,1,1,1),
+         horiz = TRUE, x.intersp = 3, text.width = 1.5, cex = 3, bty = "n")
+  
+  # ---------------------------- plot column names ---------------------------
+  plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+  text(0,0, paste0("n = 100"), font = 2, cex  = 5)
+  
+  
+  # ---------------------------- plot row names ---------------------------
+  for (i in 1:6){
+    plot(NA, xlim = c(-5,5), ylim = c(-5,5), axes = FALSE, xlab = "", ylab = "")
+    text(0,0, mains[i], font = 2, cex  = 4)
+  }
+  dev.off()
+}
+
+# ----------> plot in svg to preserve the \ell symbol
+# ----------> later converted to pdf
+
+
+
+
+# =================== check ML estimates ===================
+# minimum length of l for mvSLOUCH:
+l_seq_4[max(which(!is.na(mlparams_mvs_4[6,])))]
+l_seq_100[max(which(!is.na(mlparams_mvs_100[6,])))]
+
+# parameter values
+mlparams_mvs_4[,max(which(!is.na(mlparams_mvs_4[6,])))]
+mlparams_mvs_100[,max(which(!is.na(mlparams_mvs_100[6,])))]
+
+# # minimum length of l for rpf:
+l_seq_4[tail(which(!is.na(mlparams_rpf_4[6,])), 2)]
+mlparams_rpf_4[,max(which(!is.na(mlparams_rpf_4[6,])))]
+
+# # minimum length of l for pic:
+l_seq_100[max(which(!is.na(mlparams_pic_100[6,])))]
+mlparams_pic_4[,100]
+mlparams_pic_100[,dim(mlparams_pic_100)[2]]
+
+
+
+sapply(l_seq_4[1:48], ml_params, tree = tree_4, Xsim = Xsim_4,  method = "pic")
+
+
+
+
